@@ -46,6 +46,9 @@ printf "%s\n" "${ARCHIVES[@]}" > ./$BUILD_DIRECTORY/archives
 
 echo "Building the package..."
 
+# Disable copying of *_ files on macOS.
+COPYFILE_DISABLE=1; export COPYFILE_DISABLE
+
 tar --exclude-vcs --exclude=$BUILD_DIRECTORY --exclude=build.sh --exclude-from=./$BUILD_DIRECTORY/archives -cvf ./$BUILD_DIRECTORY/"$PACKAGE_FILENAME" -- *
 
 for ARCHIVE in "${ARCHIVES[@]}"; do
