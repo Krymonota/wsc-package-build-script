@@ -2,11 +2,8 @@
 
 PACKAGE_INFO_FILE=".packageinfo"
 
-function getPackageInfoProperty {
-  PROPERTY_KEY=$1
-  PROPERTY_VALUE=$(grep "$PROPERTY_KEY" "$PACKAGE_INFO_FILE" | cut -d'=' -f2)
-
-  echo "$PROPERTY_VALUE"
+getPackageInfoProperty() {
+  grep "$1" "$PACKAGE_INFO_FILE" | cut -d'=' -f2
 }
 
 echo "Starting to build the package..."
@@ -31,34 +28,32 @@ echo "Cleaning up build directory..."
 rm -rf $BUILD_DIRECTORY
 mkdir -p $BUILD_DIRECTORY
 
-echo "Building the archives file...";
+echo "Building the archives file..."
 
-ARCHIVES=("acptemplates" "files" "style" "templates");
+ARCHIVES=("acptemplates" "files" "style" "templates")
 PACKAGE_ARCHIVES=$(getPackageInfoProperty "packageArchives" | tr ";" "\n")
 
 if [ -n "$PACKAGE_ARCHIVES" ]; then
-  for PACKAGE_ARCHIVE in $PACKAGE_ARCHIVES; do
-    ARCHIVES+=("$PACKAGE_ARCHIVE")
-  done;
-fi;
+  ARCHIVES+=($PACKAGE_ARCHIVES)
+fi
 
-printf "%s\n" "${ARCHIVES[@]}" > ./$BUILD_DIRECTORY/archives
+printf "%s\n" "${ARCHIVES[@]}" > "$BUILD_DIRECTORY/archives"
 
 echo "Building the package..."
 
 # Disable copying of *_ files on macOS.
-COPYFILE_DISABLE=1; export COPYFILE_DISABLE
+export COPYFILE_DISABLE=1
 
-tar --format=ustar --exclude-vcs --exclude=$BUILD_DIRECTORY --exclude=build.sh --exclude-from=./$BUILD_DIRECTORY/archives -cvf ./$BUILD_DIRECTORY/"$PACKAGE_FILENAME" -- *
+tar --format=ustar --exclude-vcs --exclude="$BUILD_DIRECTORY" --exclude=build.sh --exclude-from="$BUILD_DIRECTORY/archives" -cvf "$BUILD_DIRECTORY/$PACKAGE_FILENAME" -- *
 
 for ARCHIVE in "${ARCHIVES[@]}"; do
   ARCHIVE_FILENAME="${ARCHIVE}.tar"
 
   if [ -d "$ARCHIVE" ]; then
-    cd "$ARCHIVE" && tar --format=ustar --exclude-vcs -cvf ../$BUILD_DIRECTORY/"$ARCHIVE_FILENAME" -- * && cd - || exit
-    cd $BUILD_DIRECTORY && tar --format=ustar -rvf "$PACKAGE_FILENAME" "$ARCHIVE_FILENAME" && cd - || exit
+    (cd "$ARCHIVE" && tar --format=ustar --exclude-vcs -cvf "../$BUILD_DIRECTORY/$ARCHIVE_FILENAME" -- *)
+    (cd "$BUILD_DIRECTORY" && tar --format=ustar -rvf "$PACKAGE_FILENAME" "$ARCHIVE_FILENAME")
   fi
-done;
+done
 
 echo "Finished building the package!"
 exit 0
