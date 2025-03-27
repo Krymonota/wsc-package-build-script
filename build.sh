@@ -44,14 +44,14 @@ echo "Building the package..."
 # Disable copying of *_ files on macOS.
 export COPYFILE_DISABLE=1
 
-tar --format=ustar --exclude-vcs --exclude="$BUILD_DIRECTORY" --exclude=build.sh --exclude-from="$BUILD_DIRECTORY/archives" -cvf "$BUILD_DIRECTORY/$PACKAGE_FILENAME" -- *
+git archive --format=tar --worktree-attributes --output="$BUILD_DIRECTORY/$PACKAGE_FILENAME" HEAD
 
 for ARCHIVE in "${ARCHIVES[@]}"; do
   ARCHIVE_FILENAME="${ARCHIVE}.tar"
 
   if [ -d "$ARCHIVE" ]; then
-    (cd "$ARCHIVE" && tar --format=ustar --exclude-vcs -cvf "../$BUILD_DIRECTORY/$ARCHIVE_FILENAME" -- *)
-    (cd "$BUILD_DIRECTORY" && tar --format=ustar -rvf "$PACKAGE_FILENAME" "$ARCHIVE_FILENAME")
+    git archive --format=tar --worktree-attributes --output="$BUILD_DIRECTORY/$ARCHIVE_FILENAME" HEAD:"$ARCHIVE"
+    (cd "$BUILD_DIRECTORY" && tar -rf "$PACKAGE_FILENAME" "$ARCHIVE_FILENAME" && rm "$ARCHIVE_FILENAME")
   fi
 done
 
