@@ -34,7 +34,7 @@ ARCHIVES=("acptemplates" "files" "style" "templates")
 PACKAGE_ARCHIVES=$(getPackageInfoProperty "packageArchives" | tr ";" "\n")
 
 if [ -n "$PACKAGE_ARCHIVES" ]; then
-  ARCHIVES+=($PACKAGE_ARCHIVES)
+  ARCHIVES+=("$PACKAGE_ARCHIVES")
 fi
 
 printf "%s\n" "${ARCHIVES[@]}" > "$BUILD_DIRECTORY/archives"
